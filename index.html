@@ -543,21 +543,24 @@ public class ServidorJava {
 
   public static void main (String args[]) throws IOException, InterruptedException {
 
+    // 1. CREACIÓN DE UNA VENTANA PARA MOSTRAR MENSAJES (Fase 1)
+    Ventana v = new Ventana("Servidor JAVA", 30, 30);
+        
     // ---- INICIO FASE 2: Configuración Cliente Python ----
-    // 1. CREACIÓN DEL CANAL CLIENTE HACIA EL SERVIDOR PYTHON
+    // 2. CREACIÓN DEL CANAL CLIENTE HACIA EL SERVIDOR PYTHON
     // ¡¡IMPORTANTE!! Reemplaza "172.X.244.25" por la IP correcta.
+    String HOST = "172.X.244.25";
+    int PORT = 50051;
     /*
      * TO-DO-2_3
      * */
+    v.addText("Conectado a Servidor Python (" + HOST + ":" + PORT + ")");
 
-    // 2. CREACIÓN DEL STUB BLOQUEANTE PARA COMUNICARSE CON PYTHON
+    // 3. CREACIÓN DEL STUB BLOQUEANTE PARA COMUNICARSE CON PYTHON
     /*
      * TO-DO-2_4
      * */
     // ---- FIN FASE 2 ----
-
-    // 3. CREACIÓN DE UNA VENTANA PARA MOSTRAR MENSAJES (Fase 1)
-    Ventana v = new Ventana("Servidor JAVA", 30, 30);
 
     // 4. CONFIGURACIÓN DEL SERVIDOR gRPC EN JAVA (Fase 1 y 2)
     /*
