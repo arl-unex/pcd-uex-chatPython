@@ -690,9 +690,13 @@ public class ClienteJava {
     // ------------------------------------------------------
     // 6. BUCLE DE ENVÍO DE MENSAJES
     // ------------------------------------------------------
+    System.out.println("");
+    v.addText("\n");        
     while (true) {
-      System.out.print("Tú ("+ alias +"): ");
+      System.out.print(">> Tú ("+ alias +"): \n");
       String mensaje = sc.nextLine();
+      System.out.println("");
+      v.addText("Tú ("+ alias +"): \n" + mensaje + "\n");
 
       if (mensaje.equalsIgnoreCase("exit")) {
         v.addText("Saliendo...");
@@ -710,11 +714,14 @@ public class ClienteJava {
        * */
 
       // Mostrar la respuesta del servidor
+      String respuestaServidor = "";
       /*
        * TO-DO-1_10
-       * */
-    }
-
+       * */        
+      System.out.println("<< Servidor: \n" + respuestaServidor + "\n");
+      v.addText("<< Servidor: \n" + respuestaServidor + "\n");
+    }       
+        
     // 7. CIERRE DEL CANAL
     /*
      * TO-DO-1_11
@@ -738,7 +745,7 @@ public class ClienteJava {
                 <li><code>TO-DO-1_7</code>: Extraer el identificador asignado al usuario a partir de la respuesta de la operación de registro.</li>
                 <li><code>TO-DO-1_8</code>: Dentro del bucle, construir la estructura de datos (mensaje) para enviar un mensaje de chat, incluyendo el ID del usuario y el texto del mensaje.</li>
                 <li><code>TO-DO-1_9</code>: Utilizar el proxy cliente para invocar la operación remota de envío de mensaje, enviando la solicitud de chat y almacenando la respuesta.</li>
-                <li><code>TO-DO-1_10</code>: Extraer el texto de la respuesta recibida del servidor tras enviar el mensaje y presentarlo al usuario.</li>
+                <li><code>TO-DO-1_10</code>: Extraer el texto de la respuesta recibida del servidor tras enviar el mensaje para presentarselo al usuario.</li>
                 <li><code>TO-DO-1_11</code>: Indicar el cierre del canal de comunicación y esperar un tiempo prudencial para que se complete.</li>
             </ul>
         </div>
