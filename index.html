@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tutorial gRPC Java <-> Python</title>
+
+  <!-- Fuentes e Iconos -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Fira+Code&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+        integrity="sha512-Fo3rlrZj/k7ujTnHg4CGR2DhWIJgANq7UJGoiyDMdWYRXoaF5+0dcQn5ALbCHpwNTVXkGfXbQzCP2NQ2EJq0wg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- PrismJS para Resaltado de Código -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.css" />
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-bash.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-java.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-xml-doc.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-protobuf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.css" />
+
+  <!-- Estilos Personalizados -->
+  <style>
+    /* Reset Básico */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Open Sans', sans-serif;
+      background: #f0f2f5;
+      color: #333;
+      line-height: 1.6;
+      padding: 1rem;
+    }
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      background: #fff;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1, h2, h3, h4 { margin-bottom: 1rem; font-weight: 600; }
+    h1 { font-size: 2rem; border-bottom: 2px solid #ccc; padding-bottom: 0.5rem; margin-bottom: 1.5rem; }
+    h2 { font-size: 1.75rem; margin-top: 2rem; }
+    h3 { font-size: 1.5rem; margin-top: 1.5rem; }
+    h4 { font-size: 1.25rem; margin-top: 1rem; }
+    p { margin-bottom: 1rem; }
+    /* Listas */
+    ul { list-style: disc; margin: 0.5rem 0 1rem 1.5rem; }
+    ol { list-style: decimal; margin: 0.5rem 0 1rem 1.5rem; }
+    li { margin-bottom: 0.5rem; }
+    a { color: #1a73e8; text-decoration: none; transition: color 0.3s ease; }
+    a:hover { color: #0c53b7; text-decoration: underline; }
+    /* Índice */
+    .toc {
+      background: #eef6fc;
+      padding: 1.5rem;
+      border-left: 6px solid #1a73e8;
+      margin-bottom: 2rem;
+      border-radius: 4px;
+    }
+    .toc h2 { margin-top: 0; font-size: 1.5rem; }
+    .toc ul { padding-left: 1rem; list-style: none; }
+    .toc ul li { margin: 0.5rem 0; }
+    /* Resúmenes y Ejercicios (integrados en el flujo) */
+    .resumen, .ejercicio {
+      border-radius: 4px;
+      padding: 1rem;
+      margin: 1rem 0;
+    }
+    .resumen { background: #e8f5e9; border-left: 5px solid #2e7d32; }
+    .ejercicio { background: #fff3e0; border-left: 5px solid #ff9800; }
+    /* Bloques de Código y Botón Copiar */
+    .code-container { position: relative; margin: 1.5rem 0; }
+    .copy-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background-color: #1a73e8;
+      border: 1px solid #0c53b7;
+      color: #fff;
+      padding: 0.4rem 0.8rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+      border-radius: 4px;
+      transition: background 0.3s ease;
+      z-index: 10;
+    }
+    .copy-btn:hover { background-color: #0c53b7; }
+    pre[class*="language-"] {
+      margin: 0;
+      padding: 1.5rem;
+      border-radius: 4px;
+      background: #f5f5f5;
+      overflow: auto;
+      font-size: 0.9rem;
+    }
+    pre.line-numbers { padding-left: 3.8em; }
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container { padding: 1rem; }
+      h1 { font-size: 1.75rem; }
+      .toc { padding: 1rem; }
+    }
+    /* Estilos para la guía de implementación */
+    .implementation-guide {
+        background-color: #f9f9f9;
+        border: 1px solid #eee;
+        border-left: 4px solid #ff9800; /* Naranja */
+        padding: 10px 15px;
+        margin-top: 10px;
+        margin-bottom: 15px;
+        font-size: 0.9em;
+    }
+    .implementation-guide h5 {
+        margin-top: 0;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #333;
+    }
+    .implementation-guide ul {
+        list-style-type: none;
+        padding-left: 5px;
+        margin-left: 0;
+    }
+     .implementation-guide li {
+        margin-bottom: 4px;
+        line-height: 1.4; /* Mejorar legibilidad */
+    }
+    .implementation-guide code {
+        font-family: 'Fira Code', monospace;
+        background-color: #eee;
+        padding: 2px 4px;
+        border-radius: 3px;
+        font-size: 0.95em;
+    }
+    .guide-phase {
+        margin-bottom: 15px; /* Espacio entre fases */
+    }
+    .guide-phase h5 {
+         border-bottom: 1px solid #ddd;
+         padding-bottom: 4px;
+         margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Tutorial gRPC <code>Java <-> Python</code></h1>
+  <p>
+    Este tutorial te guiará en la creación de un sistema distribuido donde un cliente Java se comunica con un servidor Java, el cual a su vez actúa como cliente de un servidor Python. Utilizaremos gRPC y Protocol Buffers con Eclipse y Maven. Los fragmentos de código incluyen marcadores <code>/* TO-DO-1_X */</code> para la primera fase (Java-Java) y <code>/* TO-DO-2_Y */</code> para la segunda fase (integración con Python) que deberás completar secuencialmente dentro de cada archivo. Consulta la "Guía de Implementación" bajo cada bloque de código para obtener orientación genérica sobre el propósito de cada TO-DO, dividida por fases cuando corresponda.
+  </p>
+
+  <nav class="toc">
+    <h2>Índice</h2>
+     <ul>
+      <li><a href="#setup">1. Configuración Inicial del Proyecto Java</a></li>
+      <li><a href="#impl-java-service">2. Implementación del Servicio Java</a></li>
+      <li><a href="#impl-java-server">3. Implementación del Servidor Java</a></li>
+      <li><a href="#impl-java-client">4. Implementación del Cliente Java</a></li>
+      <li><a href="#exec1">5. Primera Ejecución (Java <-> Java)</a></li>
+      <li><a href="#integrate-python">6. Integración con Servidor Python</a></li>
+      <li><a href="#exec2">7. Ejecución Final (Java <-> Java <-> Python)</a></li>
+    </ul>
+  </nav>
+
+  <!-- 1. Configuración Inicial del Proyecto Java -->
+  <section id="setup">
+    <h2>1. Configuración Inicial del Proyecto Java</h2>
+    <p>
+      Comenzamos configurando el entorno de desarrollo en Eclipse con Maven. Estas tareas son necesarias para ambas fases.
+    </p>
+    <!-- Contenido de la sección 1 sin cambios -->
+     <h3>1.1. Crear Proyecto Maven en Eclipse</h3>
+    <ol>
+      <li>Abrir Eclipse, ir a <strong>File → New → Other…</strong>, buscar "Maven Project".</li>
+      <li>Marcar <em>Create a simple project</em>, completar <code>groupId</code> y <code>artifactId</code> (ej: <code>com.ejemplo.chatgrpc</code>, <code>chat-java-python</code>), y finalizar.</li>
+    </ol>
+
+    <h3>1.2. Actualizar <code>pom.xml</code></h3>
+    <p>
+      Reemplaza el contenido de <code>pom.xml</code> con el siguiente código.
+    </p>
+    <div class="code-container">
+      <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+      <pre class="line-numbers language-xml"><code>&lt;project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd"&gt;
+  &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+  &lt;groupId&gt;com.ejemplo.chatgrpc&lt;/groupId&gt;
+  &lt;artifactId&gt;chat-java-python&lt;/artifactId&gt;
+  &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+
+  &lt;dependencies&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;com.google.protobuf&lt;/groupId&gt;
+      &lt;artifactId&gt;protobuf-java&lt;/artifactId&gt;
+      &lt;version&gt;3.22.2&lt;/version&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;io.grpc&lt;/groupId&gt;
+      &lt;artifactId&gt;grpc-netty-shaded&lt;/artifactId&gt;
+      &lt;version&gt;1.54.0&lt;/version&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;io.grpc&lt;/groupId&gt;
+      &lt;artifactId&gt;grpc-protobuf&lt;/artifactId&gt;
+      &lt;version&gt;1.54.0&lt;/version&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;io.grpc&lt;/groupId&gt;
+      &lt;artifactId&gt;grpc-stub&lt;/artifactId&gt;
+      &lt;version&gt;1.54.0&lt;/version&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;javax.annotation&lt;/groupId&gt;
+      &lt;artifactId&gt;javax.annotation-api&lt;/artifactId&gt;
+      &lt;version&gt;1.3.2&lt;/version&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;io.reactivex.rxjava3&lt;/groupId&gt;
+      &lt;artifactId&gt;rxjava&lt;/artifactId&gt;
+      &lt;version&gt;3.1.8&lt;/version&gt;
+    &lt;/dependency&gt;
+  &lt;/dependencies&gt;
+
+  &lt;properties&gt;
+    &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+  &lt;/properties&gt;
+
+  &lt;build&gt;
+    &lt;defaultGoal&gt;clean generate-sources compile install&lt;/defaultGoal&gt;
+    &lt;plugins&gt;
+      &lt;plugin&gt;
+        &lt;groupId&gt;com.github.os72&lt;/groupId&gt;
+        &lt;artifactId&gt;protoc-jar-maven-plugin&lt;/artifactId&gt;
+        &lt;version&gt;3.6.0.1&lt;/version&gt;
+        &lt;executions&gt;
+          &lt;execution&gt;
+            &lt;phase&gt;generate-sources&lt;/phase&gt;
+            &lt;goals&gt;
+              &lt;goal&gt;run&lt;/goal&gt;
+            &lt;/goals&gt;
+            &lt;configuration&gt;
+              &lt;includeMavenTypes&gt;direct&lt;/includeMavenTypes&gt;
+              &lt;inputDirectories&gt;
+                &lt;include&gt;src/main/resources&lt;/include&gt;
+              &lt;/inputDirectories&gt;
+              &lt;!-- Descomentar SOLO SI TIENES macOS con arquitectura Intel (x86_64)
+              &lt;protocArtifact&gt;com.google.protobuf:protoc:3.22.2:exe:osx-x86_64&lt;/protocArtifact&gt;
+              --&gt;
+              &lt;outputTargets&gt;
+                &lt;outputTarget&gt;
+                  &lt;type&gt;java&lt;/type&gt;
+                  &lt;outputDirectory&gt;src/main/java&lt;/outputDirectory&gt;
+                &lt;/outputTarget&gt;
+                &lt;outputTarget&gt;
+                  &lt;type&gt;grpc-java&lt;/type&gt;
+                  &lt;pluginArtifact&gt;io.grpc:protoc-gen-grpc-java:1.54.0&lt;/pluginArtifact&gt;
+                  &lt;outputDirectory&gt;src/main/java&lt;/outputDirectory&gt;
+                &lt;/outputTarget&gt;
+              &lt;/outputTargets&gt;
+            &lt;/configuration&gt;
+          &lt;/execution&gt;
+        &lt;/executions&gt;
+      &lt;/plugin&gt;
+      &lt;plugin&gt;
+        &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+        &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;
+        &lt;version&gt;3.8.0&lt;/version&gt;
+        &lt;configuration&gt;
+          &lt;source&gt;1.8&lt;/source&gt;
+          &lt;target&gt;1.8&lt;/target&gt;
+        &lt;/configuration&gt;
+      &lt;/plugin&gt;
+    &lt;/plugins&gt;
+  &lt;/build&gt;
+&lt;/project&gt;
+</code></pre>
+    </div>
+    <p>
+      Guarda y actualiza el proyecto Maven.
+    </p>
+
+    <h3>1.3. Crear Paquetes</h3>
+    <p>
+      Crea los paquetes <code>service</code>, <code>client</code>, y <code>server</code> en <code>src/main/java</code>.
+    </p>
+
+    <h3>1.4. Incluir el Paquete <code>pcd.util</code></h3>
+    <p>
+      Añade el paquete <code>pcd.util</code> a <code>src/main/java</code>.
+    </p>
+    <p>
+      Para nuestro ejemplo, usaremos <code>pcd.utils</code>, de esta manera tendremos una ventana para el Servidor y otra para el Cliente (lo encontrarás en tu proyecto MyDelivery o <a href="https://drive.google.com/file/d/0B4F8HbRAhxR3eFNyQXpadzdwOVk/view?usp=drive_link&resourcekey=0-5aikfeHnyl_Tb25qMnAHwA" target="_blank">aquí</a>).    
+    </p>
+
+    <h3>1.5. Añadir <code>chatJava.proto</code> y generar fuentes</h3>
+    <ol>
+        <li>Crea <code>src/main/resources</code> si no existe.</li>
+        <li>Copia el código de <code>chatJava.proto</code> en un archivo con ese nombre en <code>src/main/resources</code>.</li>
+    </ol>
+    <div class="code-container">
+        <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+        <pre class="line-numbers language-protobuf"><code>syntax = "proto3";
+
+option java_package = "grpcJava";
+option java_outer_classname = "ChatJavaOuterClass";
+package main;
+
+service ChatJava {
+  rpc RegistrarUsuarioJ (RegistroJ) returns (RespuestaJ); // Unary
+  rpc EnviarMensajeJ (MensajeChatJ) returns (RespuestaChatJ); // Unary
+}
+
+message RegistroJ {
+  string alias = 1;
+}
+
+message RespuestaJ {
+  string idUsuario = 1;
+}
+
+message MensajeChatJ {
+  string idUsuario = 1;
+  string mensaje = 2;
+}
+
+message RespuestaChatJ {
+  string respuesta = 1;
+}
+</code></pre>
+    </div>
+    <ol start="3">
+        <li>Ejecuta <strong>Maven → Generate Sources</strong>.</li>
+    </ol>
+  </section>
+
+  <!-- 2. Implementación del Servicio Java -->
+  <section id="impl-java-service">
+    <h2>2. Implementación del Servicio Java</h2>
+    <p>
+      Implementamos la lógica del servidor Java. Completa primero las tareas <code>TO-DO-1_X</code>. La guía para las tareas <code>TO-DO-2_Y</code> se encuentra en la Sección 6.
+    </p>
+
+    <h3>2.1. Crear e Implementar <code>ChatJavaImpl.java</code></h3>
+    <p>
+      Crea <code>ChatJavaImpl.java</code> en el paquete <code>service</code>. Copia el código y completa los <code>TO-DOs</code> numerados.
+    </p>
+    <div class="code-container">
+      <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+      <pre class="line-numbers language-java"><code>package service;
+
+// Importación del servicio generado por Protobuf para el lado Java.
+/*
+ * TO-DO-1_1
+ * */
+
+// Librerías de gRPC necesarias para enviar respuestas asincrónicas a los clientes.
+/*
+ * TO-DO-1_2
+ * */
+
+// Interfaz
+import pcd.util.*;
+
+// Importación del servicio generado por Protobuf del servidor Python.
+/*
+ * TO-DO-2_1
+ * */
+
+// Esta clase implementa el servicio definido en el archivo .proto de Java.
+public class ChatJavaImpl /* TO-DO-1_3 */ {
+
+  Ventana v;
+
+  // Stub de cliente gRPC para comunicarse con el servidor Python.
+  /*
+   * TO-DO-2_2
+   * */
+
+  // Constructor (Fase 1: solo recibe Ventana)
+  public ChatJavaImpl(Ventana v_/* TO-DO-2_3 */) {
+    v = v_;
+    /*
+     * TO-DO-2_4
+     * */
+  }
+
+  // IMPLEMENTACIÓN DEL MÉTODO RPC: registrarUsuarioJ
+  /* TO-DO-1_4 */
+  public void registrarUsuarioJ (/* TO-DO-1_5 */) {
+
+    // 1. Obtener el alias enviado por el cliente.
+    String alias="";
+    /*
+     * TO-DO-1_6
+     * */
+    v.addText("[Servidor] Recibido nombre de usuario: " + alias);
+
+    // 2. Mostrar consulta a Python (Mensaje para Fase 2)
+    v.addText("[Servidor] Consultando con servidor python... ");
+
+    // 3. Crear mensaje para Python.
+    /*
+     * TO-DO-2_5
+     * */
+
+    // 4. Enviar a Python y obtener respuesta.
+    /*
+     * TO-DO-2_6
+     * */
+
+    // 5. Obtener ID de la respuesta Python.
+    String idUsuario="";
+    /*
+     * TO-DO-2_7
+     * */
+
+    // (Simulación Fase 1: Comentar/eliminar para Fase 2)
+    // idUsuario = "ID_Simulado_" + alias;
+
+    v.addText("[Servidor] ID de usuario obtenido: " + idUsuario);
+
+    // 6. Preparar respuesta para el cliente Java.
+    /*
+     * TO-DO-1_7
+     * */
+
+    // 7. Enviar respuesta al cliente Java.
+    v.addText("[Servidor] Enviando ID usuario a cliente: " + idUsuario);
+    /*
+     * TO-DO-1_8
+     * */
+  }
+
+  // IMPLEMENTACIÓN DEL MÉTODO RPC: enviarMensajeJ
+  /* TO-DO-1_9 */
+  public void enviarMensajeJ (/* TO-DO-1_10 */) {
+
+    // 1. Obtener datos del mensaje Java.
+    String idUsuario="", mensaje="";
+    /*
+     * TO-DO-1_11
+     * */
+    v.addText("[Servidor] Recibido mensaje de cliente (" + idUsuario + "): " + mensaje);
+
+    // 2. Mostrar envío a Python (Mensaje para Fase 2)
+    v.addText("[Servidor] Enviando mensaje a servidor python... ");
+
+    // 3. Construir mensaje para Python.
+    /*
+     * TO-DO-2_8
+     * */
+
+    // 4. Llamar a Python y recibir respuesta.
+    /*
+     * TO-DO-2_9
+     * */
+
+    // 5. Obtener respuesta (string) de la respuesta Python.
+    String respuestaPython="";
+    /*
+     * TO-DO-2_10
+     * */
+
+    // (Simulación Fase 1: Comentar/eliminar para Fase 2)
+    // respuestaPython = "[Respuesta Simulada] Servidor Java recibió: '" + mensaje + "' de " + idUsuario;
+
+    v.addText("[Servidor] Respondiendo al cliente Java: " + respuestaPython);
+
+    // 6. Construir y enviar respuesta al cliente Java.
+    /*
+     * TO-DO-1_12
+     * */
+  }
+}
+</code></pre>
+    </div>
+    <div class="implementation-guide">
+        <div class="guide-phase">
+            <h5>Fase 1 (Java-Java): Guía de Implementación (<code>ChatJavaImpl.java</code>)</h5>
+            <ul>
+                <li><code>TO-DO-1_1</code>: Incluir las dependencias de las clases generadas por Protobuf para Java.</li>
+                <li><code>TO-DO-1_2</code>: Incluir la dependencia necesaria para manejar la comunicación asíncrona de gRPC.</li>
+                <li><code>TO-DO-1_3</code>: Indicar que esta clase implementa la interfaz del servicio definida en el <code>.proto</code> de Java.</li>
+                <li><code>TO-DO-1_4</code>: Asegurar que el método <code>registrarUsuarioJ</code> está correctamente declarado para sobrescribir el de la interfaz base.</li>
+                <li><code>TO-DO-1_5</code>: Especificar los tipos de dato correctos para los parámetros de entrada del método <code>registrarUsuarioJ</code> (solicitud y objeto para enviar respuesta).</li>
+                <li><code>TO-DO-1_6</code>: Extraer la información del alias contenida en el objeto de solicitud.</li>
+                <li><code>TO-DO-1_7</code>: Construir el objeto que representa la respuesta a enviar al cliente Java, estableciendo el identificador de usuario (usar el valor simulado).</li>
+                <li><code>TO-DO-1_8</code>: Utilizar el objeto de respuesta para enviar el resultado al cliente y señalar que la operación ha concluido.</li>
+                <li><code>TO-DO-1_9</code>: Asegurar que el método <code>enviarMensajeJ</code> está correctamente declarado para sobrescribir el de la interfaz base.</li>
+                <li><code>TO-DO-1_10</code>: Especificar los tipos de dato correctos para los parámetros de entrada del método <code>enviarMensajeJ</code>.</li>
+                <li><code>TO-DO-1_11</code>: Extraer la información del identificador de usuario y del mensaje contenida en el objeto de solicitud.</li>
+                <li><code>TO-DO-1_12</code>: Construir el objeto de respuesta para el chat, establecer el texto de respuesta (usar el valor simulado), enviarlo al cliente y señalar la conclusión de la operación.</li>
+            </ul>
+        </div>
+         <!-- Guía Fase 2 movida a Sección 6.3 -->
+    </div>
+  </section>
+
+  <!-- 3. Implementación del Servidor Java -->
+  <section id="impl-java-server">
+    <h2>3. Implementación del Servidor Java</h2>
+    <p>
+      Configuramos la clase principal que iniciará el servidor gRPC en Java. Completa primero las tareas <code>TO-DO-1_X</code>. La guía para las tareas <code>TO-DO-2_Y</code> se encuentra en la Sección 6.
+    </p>
+    <h3>3.1. Crear e Implementar <code>ServidorJava.java</code></h3>
+    <p>
+      Crea <code>ServidorJava.java</code> en <code>server</code> y completa los <code>TO-DOs</code> numerados.
+    </p>
+    <div class="code-container">
+      <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+      <pre class="line-numbers language-java"><code>package server;
+
+import pcd.util.*;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
+// Librerías necesarias para crear y administrar un servidor gRPC.
+/*
+ * TO-DO-1_1
+ * */
+
+// Importación de la clase que implementa los métodos del servicio gRPC Java.
+/*
+ * TO-DO-1_2
+ * */
+
+// Librerías para crear un canal de comunicación gRPC como cliente.
+/*
+ * TO-DO-2_1
+ * */
+
+// Importación del stub del servicio Python generado a partir del .proto.
+/*
+ * TO-DO-2_2
+ * */
+
+public class ServidorJava {
+
+  public static void main (String args[]) throws IOException, InterruptedException {
+
+    // ---- INICIO FASE 2: Configuración Cliente Python ----
+    // 1. CREACIÓN DEL CANAL CLIENTE HACIA EL SERVIDOR PYTHON
+    // ¡¡IMPORTANTE!! Reemplaza "172.X.244.25" por la IP correcta.
+    /*
+     * TO-DO-2_3
+     * */
+
+    // 2. CREACIÓN DEL STUB BLOQUEANTE PARA COMUNICARSE CON PYTHON
+    /*
+     * TO-DO-2_4
+     * */
+    // ---- FIN FASE 2 ----
+
+    // 3. CREACIÓN DE UNA VENTANA PARA MOSTRAR MENSAJES (Fase 1)
+    Ventana v = new Ventana("Servidor JAVA", 30, 30);
+
+    // 4. CONFIGURACIÓN DEL SERVIDOR gRPC EN JAVA (Fase 1 y 2)
+    /*
+     * TO-DO-1_3: Configurar y construir el servidor gRPC Java para el puerto 60051,
+     *            añadiendo una instancia de la implementación del servicio
+     *            (pasando solo la ventana 'v' en esta Fase 1).
+     *            Guardar el objeto servidor resultante.
+     */
+         /*
+          * TO-DO-2_5: Modificar la configuración del servidor (en TO-DO-1_3) para
+          *            pasar el objeto de comunicación con Python a la implementación del servicio.
+          */
+
+
+    // 5. INICIO DEL SERVIDOR (Fase 1)
+    /*
+     * TO-DO-1_4: Poner en marcha el servidor para que empiece a escuchar peticiones.
+     */
+    /*
+     * TO-DO-1_5: Mostrar un mensaje informativo en la ventana indicando que el servidor está activo.
+     */
+    /*
+     * TO-DO-1_6: Hacer que el servidor espere indefinidamente hasta ser detenido.
+     */
+
+    // 6. CIERRE DEL CANAL PYTHON (Fase 2)
+    /*
+     * TO-DO-2_6: Asegurar que la conexión establecida con el servidor Python se cierre correctamente.
+     * */
+     v.addText("Servidor Java detenido.");
+  }
+}
+</code></pre>
+    </div>
+    <div class="implementation-guide">
+         <div class="guide-phase">
+            <h5>Fase 1 (Java-Java): Guía de Implementación (<code>ServidorJava.java</code>)</h5>
+            <ul>
+                <li><code>TO-DO-1_1</code>: Incluir las dependencias para construir y gestionar el servidor gRPC.</li>
+                <li><code>TO-DO-1_2</code>: Incluir la dependencia de la clase que contiene la lógica del servicio Java.</li>
+                <li><code>TO-DO-1_3</code>: Preparar la configuración del servidor, especificando el puerto y registrando la implementación del servicio (creando una instancia solo con la ventana). Finalizar la construcción del servidor.</li>
+                <li><code>TO-DO-1_4</code>: Ejecutar la acción que inicia el servidor.</li>
+                <li><code>TO-DO-1_5</code>: Registrar un mensaje en la interfaz gráfica indicando el inicio del servidor.</li>
+                <li><code>TO-DO-1_6</code>: Bloquear el hilo principal para mantener el servidor activo.</li>
+            </ul>
+         </div>
+         <!-- Guía Fase 2 movida a Sección 6.2 -->
+    </div>
+  </section>
+
+  <!-- 4. Implementación del Cliente Java -->
+  <section id="impl-java-client">
+    <h2>4. Implementación del Cliente Java</h2>
+    <p>
+      Creamos el cliente que interactuará con nuestro servidor Java. Este archivo solo requiere completar tareas de la Fase 1.
+    </p>
+    <h3>4.1. Crear e Implementar <code>ClienteJava.java</code></h3>
+    <p>
+      Crea <code>ClienteJava.java</code> en <code>client</code> y completa los <code>TO-DOs</code> numerados.
+    </p>
+    <div class="code-container">
+      <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+      <pre class="line-numbers language-java"><code>package client;
+
+import pcd.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.Scanner;
+
+// Librerías necesarias para crear un canal gRPC.
+/*
+ * TO-DO-1_1
+ * */
+
+// Importaciones del stub y mensajes generados desde el archivo .proto.
+/*
+ * TO-DO-1_2
+ * */
+
+public class ClienteJava {
+
+  public static void main (String args[]) throws InterruptedException {
+
+    // 1. CREACIÓN DE LA VENTANA GRÁFICA
+    Ventana v = new Ventana("Cliente JAVA", 350, 30);
+
+    // 2. CONFIGURACIÓN DEL CANAL gRPC HACIA EL SERVIDOR JAVA
+    /*
+     * TO-DO-1_3
+     * */
+
+    // 3. CREACIÓN DEL STUB BLOQUEANTE PARA COMUNICARSE CON EL SERVIDOR JAVA
+    /*
+     * TO-DO-1_4
+     * */
+
+    // 4. INICIALIZAR SCANNER
+    Scanner sc = new Scanner(System.in);
+
+    // -----------------------------------------------
+    // 5. REGISTRO DEL USUARIO
+    // -----------------------------------------------
+    System.out.print("* Ingresa tu alias: ");
+    String alias = sc.nextLine();
+    v.addText("Registrando usuario: " + alias);
+
+    // Crear el mensaje de registro
+    /*
+     * TO-DO-1_5
+     * */
+
+    // Enviar el mensaje de registro al servidor Java
+    /*
+     * TO-DO-1_6
+     * */
+
+    // Obtener el ID único del usuario
+    String idUsuario="";
+    /*
+     * TO-DO-1_7
+     * */
+    v.addText("Registro exitoso. Tu ID: " + idUsuario);
+    System.out.println("\n\n................................\n\n");
+    System.out.println("¡Hola " + alias + "! Empieza a chatear (escribe 'exit' para salir).");
+
+
+    // ------------------------------------------------------
+    // 6. BUCLE DE ENVÍO DE MENSAJES
+    // ------------------------------------------------------
+    while (true) {
+      System.out.print("Tú ("+ alias +"): ");
+      String mensaje = sc.nextLine();
+
+      if (mensaje.equalsIgnoreCase("exit")) {
+        v.addText("Saliendo...");
+        break;
+      }
+
+      // Crear el mensaje de chat
+      /*
+       * TO-DO-1_8
+       * */
+
+      // Enviar el mensaje y recibir la respuesta
+      /*
+       * TO-DO-1_9
+       * */
+
+      // Mostrar la respuesta del servidor
+      /*
+       * TO-DO-1_10
+       * */
+    }
+
+    // 7. CIERRE DEL CANAL
+    /*
+     * TO-DO-1_11
+     * */
+     sc.close();
+     System.out.println("Cliente terminado.");
+  }
+}
+</code></pre>
+    </div>
+     <div class="implementation-guide">
+        <div class="guide-phase">
+            <h5>Fase 1: Guía de Implementación (<code>ClienteJava.java</code>)</h5>
+            <ul>
+                <li><code>TO-DO-1_1</code>: Incluir las dependencias para establecer una conexión gRPC cliente.</li>
+                <li><code>TO-DO-1_2</code>: Incluir las dependencias del proxy cliente (stub) y las estructuras de datos (mensajes) generadas para el servicio Java.</li>
+                <li><code>TO-DO-1_3</code>: Establecer el canal de comunicación especificando la dirección y puerto del servidor Java, indicando comunicación no segura.</li>
+                <li><code>TO-DO-1_4</code>: Crear el objeto proxy (stub) que permitirá realizar las llamadas remotas al servicio Java de forma síncrona (bloqueante).</li>
+                <li><code>TO-DO-1_5</code>: Construir la estructura de datos (mensaje) necesaria para la solicitud de registro, incluyendo el alias del usuario.</li>
+                <li><code>TO-DO-1_6</code>: Utilizar el proxy cliente para invocar la operación remota de registro, enviando la solicitud creada y almacenando la respuesta recibida.</li>
+                <li><code>TO-DO-1_7</code>: Extraer el identificador asignado al usuario a partir de la respuesta de la operación de registro.</li>
+                <li><code>TO-DO-1_8</code>: Dentro del bucle, construir la estructura de datos (mensaje) para enviar un mensaje de chat, incluyendo el ID del usuario y el texto del mensaje.</li>
+                <li><code>TO-DO-1_9</code>: Utilizar el proxy cliente para invocar la operación remota de envío de mensaje, enviando la solicitud de chat y almacenando la respuesta.</li>
+                <li><code>TO-DO-1_10</code>: Extraer el texto de la respuesta recibida del servidor tras enviar el mensaje y presentarlo al usuario.</li>
+                <li><code>TO-DO-1_11</code>: Indicar el cierre del canal de comunicación y esperar un tiempo prudencial para que se complete.</li>
+            </ul>
+        </div>
+    </div>
+  </section>
+
+  <!-- 5. Primera Ejecución -->
+  <section id="exec1">
+      <h2>5. Primera Ejecución (<code>Java <-> Java</code>)</h2>
+      <p>
+          Completa todos los <code>/* TO-DO-1_X */</code> en los tres archivos Java. Asegúrate de que en <code>ChatJavaImpl.java</code> estés usando la <strong>lógica de simulación</strong> (descomenta las líneas donde se asignan <code>idUsuario</code> y <code>respuestaPython</code> con valores simulados).
+      </p>
+      <h3>5.1. Probar y Ejecutar</h3>
+      <ol>
+          <li><strong>Ejecutar ServidorJava.java (9.1):</strong> Inícialo desde Eclipse.</li>
+          <li><strong>Ejecutar ClienteJava.java (9.2):</strong> Inícialo desde Eclipse.
+              <ul>
+                  <li>Ingresa un alias. Verifica que recibes el ID simulado.</li>
+                  <li>Envía mensajes. Verifica que recibes las respuestas simuladas.</li>
+                  <li>Escribe "exit" para terminar.</li>
+              </ul>
+          </li>
+      </ol>
+      <p>Si esto funciona, continúa con la Fase 2.</p>
+  </section>
+
+  <!-- 6. Integración con Servidor Python -->
+  <section id="integrate-python">
+    <h2>6. Integración con Servidor Python</h2>
+    <p>
+        Modifica el servidor Java para que se comunique realmente con el servidor Python. Completa las tareas marcadas como <strong><code>/* TO-DO-2_Y */</code></strong> en los archivos <code>ChatJavaImpl.java</code> y <code>ServidorJava.java</code>. La guía específica para estas tareas se encuentra a continuación.
+    </p>
+
+    <h3>6.1. Añadir <code>chatPython.proto</code> y regenerar fuentes</h3>
+    <p>Prerrequisito para la Fase 2. Asegúrate de haber completado este paso.</p>
+    <ol>
+        <li>Copia el código de <code>chatPython.proto</code> (ver abajo) en <code>src/main/resources</code> si no lo has hecho ya.</li>
+        <li><strong>Regenera las fuentes:</strong> Clic derecho en el proyecto → <strong>Run As → Maven generate-sources</strong>.</li>
+    </ol>
+     <div class="code-container">
+        <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+        <pre class="line-numbers language-protobuf"><code>syntax = "proto3";
+
+option java_package = "grpcPython";
+option java_outer_classname = "ChatPythonOuterClass";
+package main;
+
+service ChatPython {
+  rpc RegistrarUsuarioP (RegistroP) returns (RespuestaP); // Unary RPC
+  rpc EnviarMensajeP (MensajeChatP) returns (RespuestaChatP); // Unary RPC
+}
+
+message RegistroP {
+  string alias = 1;
+}
+message RespuestaP {
+  string idUsuario = 1;
+}
+message MensajeChatP {
+  string idUsuario = 1;
+  string mensaje = 2;
+}
+message RespuestaChatP {
+  string respuesta = 1;
+}
+</code></pre>
+    </div>
+
+    <h3>6.2. Modificar <code>ServidorJava.java</code></h3>
+    <p>
+        Abre <code>ServidorJava.java</code> y completa todos los <code>/* TO-DO-2_Y */</code> indicados en el código de ese archivo. Asegúrate de poner la IP correcta del servidor Python. Utiliza la guía siguiente:
+    </p>
+    <div class="implementation-guide">
+         <div class="guide-phase">
+            <h5>Fase 2 (Integración Python): Guía de Implementación (<code>ServidorJava.java</code>)</h5>
+            <ul>
+                <li><code>TO-DO-2_1</code>: Incluir las dependencias para actuar como cliente gRPC (canal).</li>
+                <li><code>TO-DO-2_2</code>: Incluir la dependencia del proxy cliente (stub) generado para el servicio Python.</li>
+                <li><code>TO-DO-2_3</code>: Establecer el canal de comunicación hacia el servidor Python, especificando su dirección y puerto, y usando comunicación no segura.</li>
+                <li><code>TO-DO-2_4</code>: Crear el objeto proxy cliente (stub) para interactuar con el servicio remoto Python de forma síncrona.</li>
+                <li><code>TO-DO-2_5</code>: Modificar la creación de la instancia de la implementación del servicio Java (realizada en <code>TO-DO-1_3</code>) para pasarle también el objeto proxy cliente Python recién creado.</li>
+                <li><code>TO-DO-2_6</code>: Implementar el cierre del canal de comunicación establecido con el servidor Python, asegurando que se liberen los recursos.</li>
+            </ul>
+         </div>
+    </div>
+
+    <h3>6.3. Modificar <code>ChatJavaImpl.java</code></h3>
+    <p>
+        Abre <code>ChatJavaImpl.java</code>. Completa todos los <code>/* TO-DO-2_Y */</code> y <strong>comenta o elimina las líneas de simulación de la Fase 1</strong>. Utiliza la guía siguiente:
+    </p>
+     <div class="implementation-guide">
+         <div class="guide-phase">
+            <h5>Fase 2 (Integración Python): Guía de Implementación (<code>ChatJavaImpl.java</code>)</h5>
+            <ul>
+                 <li><code>TO-DO-2_1</code>: Incluir las dependencias de las clases (mensajes, stub) generadas a partir del <code>.proto</code> de Python.</li>
+                 <li><code>TO-DO-2_2</code>: Declarar un campo en la clase para guardar la referencia al objeto que permite la comunicación con el servicio Python.</li>
+                 <li><code>TO-DO-2_3</code>: Modificar la firma del constructor para que acepte, además de la ventana, el objeto de comunicación con Python.</li>
+                 <li><code>TO-DO-2_4</code>: Dentro del constructor, almacenar la referencia al objeto de comunicación con Python en el campo de la clase.</li>
+                 <li><code>TO-DO-2_5</code>: En el método de registro, construir la estructura de datos (mensaje) que espera el servicio Python para registrar un usuario.</li>
+                 <li><code>TO-DO-2_6</code>: Utilizar el objeto de comunicación con Python para invocar la operación remota de registro, enviando los datos preparados y recibiendo la respuesta.</li>
+                 <li><code>TO-DO-2_7</code>: Extraer el identificador de usuario de la respuesta recibida del servicio Python. (¡Asegúrate de eliminar o comentar la simulación!).</li>
+                 <li><code>TO-DO-2_8</code>: En el método de envío de mensaje, construir la estructura de datos (mensaje) que espera el servicio Python para procesar un mensaje.</li>
+                 <li><code>TO-DO-2_9</code>: Utilizar el objeto de comunicación con Python para invocar la operación remota de envío de mensaje, enviando los datos preparados y recibiendo la respuesta.</li>
+                 <li><code>TO-DO-2_10</code>: Extraer el texto de la respuesta recibida del servicio Python. (¡Asegúrate de eliminar o comentar la simulación!).</li>
+            </ul>
+        </div>
+    </div>
+  </section>
+
+   <!-- 7. Ejecución Final -->
+  <section id="exec2">
+      <h2>7. Ejecución Final (<code>Java <-> Java <-> Python</code>)</h2>
+      <p>
+          Con todos los <code>TO-DOs</code> completados y la simulación eliminada, el sistema debería estar listo.
+      </p>
+      <h3>7.1. Probar y Ejecutar</h3>
+      <p><strong>Prerrequisito:</strong> El <strong>servidor Python</strong> debe estar ejecutándose y accesible en la IP y puerto configurados.</p>
+      <ol>
+          <li><strong>Ejecutar ServidorJava.java (13.1):</strong> Inicia el servidor Java.</li>
+          <li><strong>Ejecutar ClienteJava.java (13.2):</strong> Inicia el cliente Java.
+              <ul>
+                  <li>Ingresa tu alias. Verifica que recibes un ID real.</li>
+                  <li>Envía mensajes. Verifica que recibes respuestas reales del servidor Python.</li>
+                  <li>Escribe "exit" para terminar.</li>
+              </ul>
+          </li>
+      </ol>
+  </section>
+
+</div>
+<script>
+  function copyCode(btn) {
+    const codeBlock = btn.nextElementSibling;
+    if (!codeBlock || codeBlock.tagName !== 'PRE') {
+        console.error("Could not find the <pre> block next to the button.");
+        return;
+    }
+    const clone = codeBlock.cloneNode(true);
+    const lineNumbers = clone.querySelector('.line-numbers-rows');
+    if (lineNumbers) {
+        lineNumbers.remove();
+    }
+    const codeText = clone.innerText || clone.textContent;
+
+    navigator.clipboard.writeText(codeText.trim()).then(() => {
+      const originalText = btn.innerText;
+      btn.innerText = "¡Copiado!";
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.innerText = originalText;
+        btn.classList.remove('copied');
+      }, 1500);
+    }).catch(err => {
+      console.error("Error al copiar el código:", err);
+      const originalText = btn.innerText;
+      btn.innerText = "Error";
+      setTimeout(() => {
+        btn.innerText = originalText;
+      }, 2000);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', (event) => {
+      const preElements = document.querySelectorAll('pre.line-numbers');
+      preElements.forEach((pre) => { }); // Basic Prism init logic if needed
+  });
+</script>
+</body>
+</html>
